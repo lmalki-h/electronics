@@ -1,19 +1,22 @@
 RM = rm 
 RF = -rf
 CC= avr-gcc
+TARGET = main
+
+F_CPU=16000000
+MMCU=atmega328p
 
 all: hex flash
 
-hex:
-	$(CC) -g -D F_CPU=16000000 -mmcu=atmega328p -c main.c #source to object code
-	$(CC) -g -mmcu=atmega328p -o main.bin main.o
-	avr-objcopy -j .text -j .data -O ihex main.bin main.hex
+hex: main.c
+	$(CC) -g -Os -D F_CPU=$(F_CPU) -mmcu=$(MMCU) -c $(TARGET).c
+	$(CC) -g -mmcu=$(MMCU) -o $(TARGET).bin $(TARGET).o
+	avr-objcopy -j .text -j .data -O ihex $(TARGET).bin $(TARGET).hex
 
-flash:
-	avrdude -p atmega328p -c arduino -P /dev/ttyUSB0 -U flash:w:main.hex:i
-
+flash: hex
+	avrdude -p $(MMCU) -c arduino -P /dev/ttyUSB0 -U flash:w:$(TARGET).hex:i
 
 clean:
-	$(RM) $(RF) main.o
-	$(RM) $(RF) main.hex
-	$(RM) $(RF) main.bin
+	$(RM) $(RF) $(TARGET).o
+	$(RM) $(RF) $(TARGET).hex
+	$(RM) $(RF) $(TARGET).bin
