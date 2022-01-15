@@ -17,7 +17,7 @@ void main(void)
 	TCCR1B |= (1 << CS12); //256. set 0-2 bits of TCCR1B to prescalar. see: 16.11.2 & Table 16-5.
 	
 
-	OCR1A = ICR1 / 10; //rapport cyclique de 50%
+	OCR1A = ICR1 / 10; //rapport cyclique de 10%
 
 	for (;;) ;
 }
