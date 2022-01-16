@@ -15,6 +15,7 @@ hex: main.c
 
 flash: hex
 	avrdude -p $(MMCU) -c arduino -P /dev/ttyUSB0 -U flash:w:$(TARGET).hex:i
+	avrdude -p $(MMCU) -c arduino -P /dev/ttyUSB1 -U flash:w:$(TARGET).hex:i
 
 clean:
 	$(RM) $(RF) $(TARGET).o

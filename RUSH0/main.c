@@ -35,7 +35,6 @@ void start_countdown()
 }
 
 void flash_de_la_victoire() {
-    // PORTB = 0;
     PORTB = ~ ( 0 );
 }
 
@@ -46,7 +45,6 @@ void reset(int alert)
     COUNTDOWN = 0;
     GAME_STARTED = 0;
     PORTB = 0;
-    // TIMSK1 = 0;
     if (alert)
         uart_tx('r');
 }
@@ -55,8 +53,8 @@ __attribute__((signal)) void USART_RX_vect()
     char c = UDR0;
     if ( c == 's' ) { // SLAVE
         SLAVE = 1;
-        PORTB = ~ ( 0 );
-        COUNTDOWN = 1;
+        TIMSK1 = 0;
+        start_countdown();
     }
     else if (c == 'c') { // COUNTDOWN
         PORTB = PORTB << 1;
@@ -67,7 +65,8 @@ __attribute__((signal)) void USART_RX_vect()
     } 
     else if (c == 'w') { // WINNERRRR
         flash_de_la_victoire();
-        // reset(1);
+        COUNTDOWN = 0;
+        GAME_STARTED = 0;
     }
     else if (c == 'l') { // LOOOSEEERRR
         GAME_STARTED = 0;
@@ -85,10 +84,11 @@ __attribute__((signal)) void TIMER1_COMPA_vect()
         PORTB = PORTB << 1;
         uart_tx('c');
     }
-    if (PORTB == 0xF0) {
+    if (PORTB == 0xF0 && MASTER && !GAME_STARTED) {
         COUNTDOWN = 0;
         GAME_STARTED = 1;
         uart_tx('g');
+        TIMSK1 = 0;
     }
 }
 
@@ -107,7 +107,7 @@ void main(void)
 	TCCR1B |= (1 << CS12); //256. set 0-2 bits of TCCR1B to prescalar. see: 16.11.2 & Table 16-5.
     OCR1A = F_CPU / 256 - 1; //
 
-    TIMSK1 |= ( 1 << OCIE1A);
+    // TIMSK1 |= ( 1 << OCIE1A);
     SREG |= (1 << 7);
     
     for (;;) 
@@ -117,18 +117,21 @@ void main(void)
             if (!MASTER && !SLAVE) //set player status
             {
                 MASTER = 1;
+                TIMSK1 |= ( 1 << OCIE1A);
                 uart_tx('s');
                 start_countdown();
             }
             else if (COUNTDOWN)
             {
                 uart_tx('w');
+                COUNTDOWN = 0;
+                GAME_STARTED = 0;
                 PORTB = 0;
             }
             else if (GAME_STARTED) {
                 uart_tx('l');
                 flash_de_la_victoire();
-                //reset(1);
+                GAME_STARTED = 0;
             }
             for (uint32_t delay = 0; delay < 800000; delay++) ;
         }
