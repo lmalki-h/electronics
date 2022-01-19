@@ -2,29 +2,30 @@
 
 void EEPROM_write(unsigned int uiAddress, unsigned char ucData)
 {
-    while (EECR & (1 << EEPE)) ;
+    while (EECR & (1 << EEPE)) ; //wait until register is ready for writing
 
-    EEAR = uiAddress;
-    EEDR = ucData;
+    EEAR = uiAddress; //set up address to EEPROM Address Register see 8.6.1
+    EEDR = ucData; //set up data to EEPROM data register see 8.6.1
 
-    EECR |= ( 1 << EEMPE);
+    EECR |= ( 1 << EEMPE); //EEPROM Master Write Enable see 8.6.3
 
-    EECR |= ( 1 << EEPE);
+    EECR |= ( 1 << EEPE); //EEPROM Master Write Enable see 8.6.3
 
 }
 
 unsigned char EEPROM_read(unsigned int uiAddress)
 {
-    while (EECR & (1 << EEPE)) ;
+    while (EECR & (1 << EEPE)) ; //wait until register is ready for reading
 
-    EEAR = uiAddress;
+    EEAR = uiAddress;   //set up address register see 8.6.1
 
-    EECR |= ( 1 << EERE );
+    EECR |= ( 1 << EERE );  //erase and write & EEPROM Read Enable
 
     return EEDR;
 }
 
 uint8_t counter = 0;
+
 void main(void)
 {
 	DDRB = 0xff; //set all pins to output mode
